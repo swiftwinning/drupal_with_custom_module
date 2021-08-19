@@ -5,11 +5,19 @@ custom_mbta_api_module.blue_line_basic_info:
     _title: 'Return basic info about the Blue Line MBTA route.'
   requirements:
     _permission: 'access content'
-    
+
 custom_mbta_api_module.routes_with_css:
   path: '/css'
   defaults:
     _controller: '\Drupal\custom_mbta_api_module\Controller\MbtaApiController::routesWithCss'
     _title: 'Return table of all MBTA routes styled in official colors.'
+  requirements:
+    _permission: 'access content'
+
+custom_mbta_api_module.route_schedule_json:
+  path: '/sched/{id}'
+  defaults:
+    _controller: '\Drupal\custom_mbta_api_module\Controller\MbtaApiController::routeScheduleJson'
+    _title: 'Basic route schedule'
   requirements:
     _permission: 'access content'

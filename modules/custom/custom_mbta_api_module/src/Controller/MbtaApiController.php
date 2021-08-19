@@ -94,4 +94,18 @@ class MbtaApiController extends ControllerBase {
     return ($build);
   }
 
+  /**
+   * Returns JSON Http Response, full schedule of the route with specified ID
+   *   Stub to test route links, until functionality to display formatted schedules
+   */
+  public function routeScheduleJson($id) {
+    $request = $this->httpClient->request(
+      'GET',
+      $this->baseUri.'schedules?filter[route]='.$id
+    );
+    return $request;
+  }
+
+
+
 }
