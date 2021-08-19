@@ -1,0 +1,7 @@
+custom_mbta_api_module.blue_line_basic_info:
+  path: '/blue'
+  defaults:
+    _controller: '\Drupal\custom_mbta_api_module\Controller\MbtaApiController::blueBasicInfo'
+    _title: 'Return basic info about the Blue Line MBTA route.'
+  requirements:
+    _permission: 'access content'
