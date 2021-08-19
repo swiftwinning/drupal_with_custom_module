@@ -5,6 +5,7 @@ namespace Drupal\custom_mbta_api_module\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use GuzzleHttp\Client;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Url;
 
 /**
  * @package Drupal\custom_mbta_api_module\Controller
@@ -19,7 +20,7 @@ class MbtaApiController extends ControllerBase {
   /**
    * @var String
    */
-  protected $baseUri = 'https://api-v3.mbta.com/';
+  protected $baseUri = 'https://api-v3.mbta.com';
 
   /**
    * MbtaApiController constructor function.
@@ -52,20 +53,21 @@ class MbtaApiController extends ControllerBase {
   public function blueBasicInfo() {
     $request = $this->httpClient->request(
       'GET',
-      $this->baseUri.'routes/Blue'
+      $this->baseUri.'/routes/Blue'
     );
     return $request;
   }
 
   /**
    * Returns Table of all MBTA routes with official colors.
-   *   Note: does not use 'sort=description'/'sort=-description' option
-   *   Default sort order may be preferable. Discuss options with stakeholders.
+   *   Note: 'routesWithCss()' & 'routesWithLinks()' do not use
+   *   'sort=description'/'sort=-description' options.
+   *   Default sort order may be preferable. Discuss sorting options with stakeholders.
    */
   public function routesWithCss() {
     $request = $this->httpClient->request(
       'GET',
-      $this->baseUri.'routes?fields[route]=color,text_color,long_name',
+      $this->baseUri.'/routes?fields[route]=color,text_color,long_name',
     );
     $routeInfo = $request->getBody()->getContents();
     $routeArray = json_decode($routeInfo, true)['data'];
@@ -101,9 +103,45 @@ class MbtaApiController extends ControllerBase {
   public function routeScheduleJson($id) {
     $request = $this->httpClient->request(
       'GET',
-      $this->baseUri.'schedules?filter[route]='.$id
+      $this->baseUri.'/schedules?filter[route]='.$id
     );
     return $request;
+  }
+
+  /**
+   * Returns Table of all MBTA routes, with links from each route to its schedule.
+   *   Note: 'routesWithCss()' & 'routesWithLinks()' do not use
+   *   'sort=description'/'sort=-description' options.
+   *   Default sort order may be preferable. Discuss sorting options with stakeholders.
+   */
+  public function routesWithLinks() {
+    $request = $this->httpClient->request(
+      'GET',
+      $this->baseUri.'/routes?fields[route]=color,text_color,long_name',
+    );
+    $response = $request->getBody()->getContents();
+    $routeArray = json_decode($response, true)['data'];
+
+    $arrayOfRowElements = [];
+
+    foreach ($routeArray as $route) {
+      $long_name = $route['attributes']['long_name'];
+      $idString = $route['id'];
+      $url = Url::fromRoute(
+        'custom_mbta_api_module.route_schedule_json', ['id' => $idString]
+      );
+      $link_to_route = [
+        \Drupal::l(t($long_name), $url),
+      ];
+      $arrayOfRowElements[] = $link_to_route;
+    }
+
+    $build[] = [
+      '#type' => 'table',
+      '#header' => [$this->t('Select a route')],
+      '#rows' => $arrayOfRowElements,
+    ];
+    return ($build);
   }
 
 

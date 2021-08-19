@@ -21,3 +21,11 @@ custom_mbta_api_module.route_schedule_json:
     _title: 'Basic route schedule'
   requirements:
     _permission: 'access content'
+
+custom_mbta_api_module.routes_with_links:
+  path: '/links'
+  defaults:
+    _controller: '\Drupal\custom_mbta_api_module\Controller\MbtaApiController::routesWithLinks'
+    _title: 'Return table of all MBTA routes with links to schedules.'
+  requirements:
+    _permission: 'access content'
