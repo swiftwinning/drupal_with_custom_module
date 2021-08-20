@@ -1,143 +1,24 @@
-
-CONTENTS OF THIS FILE
----------------------
-
- * About Drupal
- * Configuration and features
- * Installation profiles
- * Appearance
- * Developing for Drupal
- * More information
-
-
-ABOUT DRUPAL
-------------
-
-Drupal is an open source content management platform supporting a variety of
-websites ranging from personal weblogs to large community-driven websites. For
-more information, see the Drupal website at https://www.drupal.org, and join
-the Drupal community at https://www.drupal.org/community.
-
-Legal information about Drupal:
- * Know your rights when using Drupal:
-   See LICENSE.txt in the "core" directory.
- * Learn about the Drupal trademark and logo policy:
-   https://www.drupal.com/trademark
-
-
-CONFIGURATION AND FEATURES
---------------------------
-
-Drupal core (what you get when you download and extract a drupal-x.y.tar.gz or
-drupal-x.y.zip file from https://www.drupal.org/project/drupal) has what you
-need to get started with your website. It includes several modules (extensions
-that add functionality) for common website features, such as managing content,
-user accounts, image uploading, and search. Core comes with many options that
-allow site-specific configuration. In addition to the core modules, there are
-thousands of contributed modules (for functionality not included with Drupal
-core) available for download.
-
-More about configuration:
- * Install, update, and maintain Drupal:
-   See INSTALL.txt and UPDATE.txt in the "core" directory.
- * Learn about how to use Drupal to create your site:
-   https://www.drupal.org/documentation
- * Follow best practices:
-   https://www.drupal.org/best-practices
- * Download contributed modules to /modules to extend Drupal's functionality:
-   https://www.drupal.org/project/modules
- * See also: "Developing for Drupal" for writing your own modules, below.
-
-
-INSTALLATION PROFILES
----------------------
-
-Installation profiles define additional steps (such as enabling modules,
-defining content types, etc.) that run after the base installation provided
-by core when Drupal is first installed. There are two basic installation
-profiles provided with Drupal core.
-
-Installation profiles from the Drupal community modify the installation process
-to provide a website for a specific use case, such as a CMS for media
-publishers, a web-based project tracking tool, or a full-fledged CRM for
-non-profit organizations raising money and accepting donations. They can be
-distributed as bare installation profiles or as "distributions". Distributions
-include Drupal core, the installation profile, and all other required
-extensions, such as contributed and custom modules, themes, and third-party
-libraries. Bare installation profiles require you to download Drupal Core and
-the required extensions separately; place the downloaded profile in the
-/profiles directory before you start the installation process.
-
-More about installation profiles and distributions:
- * Read about the difference between installation profiles and distributions:
-   https://www.drupal.org/docs/8/distributions/creating-distributions
- * Download contributed installation profiles and distributions:
-   https://www.drupal.org/project/distributions
- * Develop your own installation profile or distribution:
-   https://www.drupal.org/docs/8/creating-distributions
-
-
-APPEARANCE
-----------
-
-In Drupal, the appearance of your site is set by the theme (themes are
-extensions that set fonts, colors, and layout). Drupal core comes with several
-themes. More themes are available for download, and you can also create your own
-custom theme.
-
-More about themes:
- * Download contributed themes to /themes to modify Drupal's appearance:
-   https://www.drupal.org/project/themes
- * Develop your own theme:
-   https://www.drupal.org/docs/8/theming
-
-
-DEVELOPING FOR DRUPAL
----------------------
-
-Drupal contains an extensive API that allows you to add to and modify the
-functionality of your site. The API consists of "hooks", which allow modules to
-react to system events and customize Drupal's behavior, and functions that
-standardize common operations such as database queries and form generation. The
-flexible hook architecture means that you should never need to directly modify
-the files that come with Drupal core to achieve the functionality you want;
-instead, functionality modifications take the form of modules.
-
-When you need new functionality for your Drupal site, search for existing
-contributed modules. If you find a module that matches except for a bug or an
-additional needed feature, change the module and contribute your improvements
-back to the project in the form of a "patch". Create new custom modules only
-when nothing existing comes close to what you need.
-
-More about developing:
- * Search for existing contributed modules:
-   https://www.drupal.org/project/modules
- * Contribute a patch:
-   https://www.drupal.org/patch/submit
- * Develop your own module:
-   https://www.drupal.org/developing/modules
- * Follow programming best practices:
-   https://www.drupal.org/developing/best-practices
- * Refer to the API documentation:
-   https://api.drupal.org/api/drupal/8
- * Learn from documented Drupal API examples:
-   https://www.drupal.org/project/examples
-
-
-MORE INFORMATION
-----------------
-
- * See the Drupal.org online documentation:
-   https://www.drupal.org/documentation
-
- * For a list of security announcements, see the "Security advisories" page at
-   https://www.drupal.org/security (available as an RSS feed). This page also
-   describes how to subscribe to these announcements via email.
-
- * For information about the Drupal security process, or to find out how to
-   report a potential security issue to the Drupal security team, see the
-   "Security team" page at https://www.drupal.org/security-team
-
- * For information about the wide range of available support options, visit
-   https://www.drupal.org and click on Community and Support in the top or
-   bottom navigation.
+Snapshot of MBTA API app project as of Aug. 18, 2021:
+Development will continue on the issues described below in a separate repository. 
+This repository will remain as a snapshot so that developers, project managers, clients, or other stakeholders have a common point of reference for discussion, without having to search back to previous commits in the active development repository.
+You should be able to build the app with the contents of 'mbta-composer-assets.zip' and running 'composer install' from root directory. The full app is also available in 'mbta-full-app-install.zip', or simply pulling it from GitHub. 
+Primary issues and areas to refactor:
+Efficiency/performance of API requests:
+ESPECIALLY find a way to pre-load human readable names of stops along a route. It's incredibly inefficient to query for each stop name when displaying schedule.
+Writing more targeted API requests, caching some data in memory, writing some to database, and choosing a definition of "up-to-the-minute" that prevents duplicating recent data will all be useful techniques. These design decisions should be based on needs of the current and future data model.
+In particular, discuss with project manager/client/stakeholders what form(s) the schedule display should take.
+Discuss if/when 'Predictions' should be supplemented by 'Schedules' when real-time data is unavailable, or if hypothetical schedules should never be mixed with actual data.
+Add API key to increase request limit.
+Unite CSS & Links:
+Replace table of links with current (non-deprecated) and framework-based implementation. My understanding is the l() method currently used is deprecated in Drupal 8&9, what's current best practice for adding links?
+Minimize hand-written code (especially minimize hand-written HTML!) by using a framework-based method of adding classes to elements.
+It seems likely that a Drupal-based design can better unite the functionality with the style, compared to furthering these code-based implementations.
+OR - Hard code the list of routes! As opposed to route predictions that have ever-changing traffic conditions, real-time conditions have limited effects on the list of routes. Adding classes to elements on-the-fly, based on an API request, is what makes this more of a design challenge, and our needs may not require us to focus efforts here.
+Discuss sort-order with stakeholders.
+Separation of concerns:
+Separate HTTP Client into its own service controller.
+Move http request options from controller to services definition files.
+Replace hand-written render arrays in controller class. Choose a model for templating data display (Twig files, Entity objects, display block Plugins...). 
+Should this module constitute a full view/display, or is this a widget to be incorporated into a larger UI? Does the answer to that effect responsive design decisions?
+Error handling:
+In addition to question of supplementing with 'Schedules' when real-time 'Predictions' of routes are unavailable, what are other error handling considerations? When an API request fails, do we want to fall back on other data, or give the user an error message stating the real-time content is unavailable, or some combination of the two?
