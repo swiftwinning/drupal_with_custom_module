@@ -14,26 +14,10 @@ custom_mbta_api_module.routes_with_links:
   requirements:
     _permission: 'access content'
 
-custom_mbta_api_module.route_schedule_json:
-  path: '/sched/{id}'
-  defaults:
-    _controller: '\Drupal\custom_mbta_api_module\Controller\MbtaApiController::routeScheduleJson'
-    _title: 'Return raw JSON data for schedule of the route with specified id.'
-  requirements:
-    _permission: 'access content'
-
-custom_mbta_api_module.basic_schedule_table:
+custom_mbta_api_module.readable_schedule_table:
   path: '/schedule/{id}'
   defaults:
-    _controller: '\Drupal\custom_mbta_api_module\Controller\MbtaApiController::basicScheduleTable'
+    _controller: '\Drupal\custom_mbta_api_module\Controller\MbtaApiController::readableScheduleTable'
     _title: 'Return table of stripped down schedule data for the route with specified id.'
-  requirements:
-    _permission: 'access content'
-
-custom_mbta_api_module.blue_line_basic_info:
-  path: '/blue'
-  defaults:
-    _controller: '\Drupal\custom_mbta_api_module\Controller\MbtaApiController::blueBasicInfo'
-    _title: 'Return basic info about the Blue Line MBTA route.'
   requirements:
     _permission: 'access content'

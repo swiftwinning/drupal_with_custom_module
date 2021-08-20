@@ -54,10 +54,15 @@ class MbtaApiController extends ControllerBase {
    *   Default sort order may be preferable. Discuss sorting options with stakeholders.
    */
   public function routesWithCss() {
-    $request = $this->httpClient->request(
-      'GET',
-      $this->baseUri.'/routes?fields[route]=color,text_color,long_name',
-    );
+    try {
+      $request = $this->httpClient->request(
+        'GET',
+        $this->baseUri.'/routes?fields[route]=color,text_color,long_name',
+      );
+    } catch (RequestException $e) {
+      //  Do proper error handling.
+      return $e;
+    }
     $routeInfo = $request->getBody()->getContents();
     $routeArray = json_decode($routeInfo, true)['data'];
 
@@ -92,20 +97,29 @@ class MbtaApiController extends ControllerBase {
    *   Default sort order may be preferable. Discuss sorting options with stakeholders.
    */
   public function routesWithLinks() {
-    $request = $this->httpClient->request(
-      'GET',
-      $this->baseUri.'/routes?fields[route]=color,text_color,long_name',
-    );
+    try {
+      $request = $this->httpClient->request(
+        'GET',
+        $this->baseUri.'/routes?fields[route]=long_name',
+      );
+    } catch (RequestException $e) {
+      //  Do proper error handling.
+      return $e;
+    }
     $response = $request->getBody()->getContents();
     $routeArray = json_decode($response, true)['data'];
 
     $arrayOfRowElements = [];
 
+    // Refactor this!!! Extremely inefficient to send new request for each stop
+    //   on the route! If the API doesn't provide a more direct way to formulate
+    //   a request for the same data, the human-readable names of stops need to
+    //   be cached in app or stored in db
     foreach ($routeArray as $route) {
       $long_name = $route['attributes']['long_name'];
       $idString = $route['id'];
       $url = Url::fromRoute(
-        'custom_mbta_api_module.basic_schedule_table', ['id' => $idString]
+        'custom_mbta_api_module.readable_schedule_table', ['id' => $idString]
       );
       $link_to_route = [
         \Drupal::l(t($long_name), $url),
@@ -121,26 +135,18 @@ class MbtaApiController extends ControllerBase {
     return ($build);
   }
 
-  /**
-   * Returns JSON Http Response, full schedule of the route with specified ID
-   *   Stub to test route links, until functionality to display formatted schedules
-   */
-  public function routeScheduleJson($id) {
-    $request = $this->httpClient->request(
-      'GET',
-      $this->baseUri.'/schedules?filter[route]='.$id
-    );
-    return $request;
-  }
-
-  public function basicScheduleTable($id) {
+  public function readableScheduleTable($id) {
     try {
       $request = $this->httpClient->request(
         'GET',
-        $this->baseUri.'/schedules?filter[route]='.$id.'&page[limit]=100',
+        //  Consider defaulting to 'Schedules' when 'Predictions' are unavailable
+        //  For example off service hours.
+        //$this->baseUri.'/predictions?filter[route]='.$id.'&page[limit]=25',
+        $this->baseUri.'/schedules?filter[route]='.$id.'&page[limit]=25',
       );
     } catch (RequestException $e) {
       //  Do proper error handling.
+      return $e;
     }
     $response = $request->getBody()->getContents();
     $scheduleArray = json_decode($response, true)['data'];
@@ -151,35 +157,61 @@ class MbtaApiController extends ControllerBase {
       $arrival_time = $stop['attributes']['arrival_time'];
       $departure_time = $stop['attributes']['departure_time'];
       $stopId = $stop['relationships']['stop']['data']['id'];
-      if (!is_null($departure_time)) {
-        $timestamp = $departure_time;
-      } else {
-        $timestamp = $arrival_time;
+
+      //  There must be a better way to pre-load human readable names with
+      //    the original API response.
+      //  Or - to cache an associative array of [stopId => stopName] in our app.
+      //  This is clearly wrong, too many API calls.
+      try {
+        $request = $this->httpClient->request(
+          'GET',
+          $this->baseUri.'/stops/'.$stopId.'?fields[stop]=name',
+        );
+      } catch (RequestException $e) {
+        //  Do proper error handling.
+        return $e;
       }
-      $rows[] = [$stopId, $timestamp];
+      $response = $request->getBody()->getContents();
+      $stopName = json_decode($response, true)['data']['attributes']['name'];
+      $timestamp = $departure_time ? $departure_time : $arrival_time;
+      $time = $this->parseIsoFormatToReadableTime($timestamp);
+      $rows[] = [$this->t($stopName), $this->t($time)];
     }
 
     $build[] = [
       '#type' => 'page',
       'content' => [
         '#type' => 'table',
-        '#caption' => $this->t('Test API response: '.$id.' route basic schedule'),
-        '#header' => [$this->t('Stop Id'), $this->t('Time')],
+        '#header' => [$this->t('Stop Name'), $this->t('Time')],
         '#rows' => $rows,
       ],
     ];
     return $build;
   }
 
-  /**
-   * Returns JSON Http Response to test a basic endpoint of MBTA API
+  /*
+   * Private helper method takes ISO8601 Formatted string and returns
+   *   human-readable time, hh:mm, 12-hour formatted.
    */
-  public function blueBasicInfo() {
-    $request = $this->httpClient->request(
-      'GET',
-      $this->baseUri.'/routes/Blue'
-    );
-    return $request;
+  private function parseIsoFormatToReadableTime(String $isoFormattedTimestamp) {
+    $hours = intval(substr($isoFormattedTimestamp, 11, 2));
+    $minutes = substr($isoFormattedTimestamp, 14, 2);
+    $operator = substr($isoFormattedTimestamp, 19, 1);
+    $offset = intval(substr($isoFormattedTimestamp, 20, 2));
+    if ($offset) {
+      if ($operator == '-') {
+        $hours -= $offset;
+      } elseif ($operator == '+'){
+        $hours += $offset;
+      }
+    }
+    if ($hours <= 0) {
+      $hours += 12;
+    } elseif ($hours >= 13) {
+      $hours = $hours % 12;
+    }
+    return $hours.':'.$minutes;
   }
 
 }
+?>
