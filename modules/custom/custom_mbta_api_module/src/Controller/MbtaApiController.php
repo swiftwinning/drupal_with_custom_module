@@ -48,17 +48,6 @@ class MbtaApiController extends ControllerBase {
   // }
 
   /**
-   * Returns JSON Http Response to test a basic endpoint of MBTA API
-   */
-  public function blueBasicInfo() {
-    $request = $this->httpClient->request(
-      'GET',
-      $this->baseUri.'/routes/Blue'
-    );
-    return $request;
-  }
-
-  /**
    * Returns Table of all MBTA routes with official colors.
    *   Note: 'routesWithCss()' & 'routesWithLinks()' do not use
    *   'sort=description'/'sort=-description' options.
@@ -97,18 +86,6 @@ class MbtaApiController extends ControllerBase {
   }
 
   /**
-   * Returns JSON Http Response, full schedule of the route with specified ID
-   *   Stub to test route links, until functionality to display formatted schedules
-   */
-  public function routeScheduleJson($id) {
-    $request = $this->httpClient->request(
-      'GET',
-      $this->baseUri.'/schedules?filter[route]='.$id
-    );
-    return $request;
-  }
-
-  /**
    * Returns Table of all MBTA routes, with links from each route to its schedule.
    *   Note: 'routesWithCss()' & 'routesWithLinks()' do not use
    *   'sort=description'/'sort=-description' options.
@@ -128,7 +105,7 @@ class MbtaApiController extends ControllerBase {
       $long_name = $route['attributes']['long_name'];
       $idString = $route['id'];
       $url = Url::fromRoute(
-        'custom_mbta_api_module.route_schedule_json', ['id' => $idString]
+        'custom_mbta_api_module.basic_schedule_table', ['id' => $idString]
       );
       $link_to_route = [
         \Drupal::l(t($long_name), $url),
@@ -144,6 +121,65 @@ class MbtaApiController extends ControllerBase {
     return ($build);
   }
 
+  /**
+   * Returns JSON Http Response, full schedule of the route with specified ID
+   *   Stub to test route links, until functionality to display formatted schedules
+   */
+  public function routeScheduleJson($id) {
+    $request = $this->httpClient->request(
+      'GET',
+      $this->baseUri.'/schedules?filter[route]='.$id
+    );
+    return $request;
+  }
 
+  public function basicScheduleTable($id) {
+    try {
+      $request = $this->httpClient->request(
+        'GET',
+        $this->baseUri.'/schedules?filter[route]='.$id.'&page[limit]=100',
+      );
+    } catch (RequestException $e) {
+      //  Do proper error handling.
+    }
+    $response = $request->getBody()->getContents();
+    $scheduleArray = json_decode($response, true)['data'];
+
+    $rows = [];
+
+    foreach ($scheduleArray as $stop) {
+      $arrival_time = $stop['attributes']['arrival_time'];
+      $departure_time = $stop['attributes']['departure_time'];
+      $stopId = $stop['relationships']['stop']['data']['id'];
+      if (!is_null($departure_time)) {
+        $timestamp = $departure_time;
+      } else {
+        $timestamp = $arrival_time;
+      }
+      $rows[] = [$stopId, $timestamp];
+    }
+
+    $build[] = [
+      '#type' => 'page',
+      'content' => [
+        '#type' => 'table',
+        '#caption' => $this->t('Test API response: '.$id.' route basic schedule'),
+        '#header' => [$this->t('Stop Id'), $this->t('Time')],
+        '#rows' => $rows,
+      ],
+    ];
+    return $build;
+  }
+
+  /**
+   * Returns JSON Http Response to test a basic endpoint of MBTA API
+   */
+  public function blueBasicInfo() {
+    $request = $this->httpClient->request(
+      'GET',
+      $this->baseUri.'/routes/Blue'
+    );
+    return $request;
+  }
 
 }
